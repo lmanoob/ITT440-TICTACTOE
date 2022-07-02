@@ -10,19 +10,19 @@ import uuid
 
 #Create server socket object
 try:
-  socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 except socket.error:
-  print("Could not create socket")
+	print('Could not create socket')
 
 #Bind to port 6869
 try:
-   socket.bind(('', 6869))
+    socket.bind(('', 6869))
 except socket.error:
-   print("Failed")
-   sys.exit()
+    print ('Failed')
+    sys.exit()
 
 socket.listen(5)
-print("Listening")
+print 'Listening'
 
 #Keeps track of players currently in the server
 players=[]
@@ -31,29 +31,29 @@ gameList=[]
 lock=RLock()
 
 def connect(clientSock):
-  """Run for each client that connects to the server
-  Handles messages sent from the client and sends corresponding responses"""
+	"""Run for each client that connects to the server
+	Handles messages sent from the client and sends corresponding responses"""
 
 	#Opening message to client. Also breaks initial client WAIT loop, allowing the client to send input
 	clientSock.send("Welcome to Tic Tac Toe")
 
-  #Main connection loop. Handles all messages from client
-  while True:
-    #Command sent by client
-    cmd=clientSock.recv(4096)
-    #Login functionality
-    req=cmd.split(" ")
-    #Checks that user is asking to login, and also has specified a username
-    if req[0]=='login' and req[1]:
-      username=req[1]
-      found = False
-      #Check if username exists already
-      for p in players:
-        #If it does, then the user logged back in. No need to create a new user
-        if p.username==username:
-          currPlayer=p
-          found=True
-          print(currPlayer.username+" logged in")
+	#Main connection loop. Handles all messages from client
+	while True:
+		#Command sent by client
+		cmd=clientSock.recv(4096)
+		#Login functionality
+		req=cmd.split(" ")
+		#Checks that user is asking to login, and also has specified a username
+		if req[0]=='login' and req[1]:
+			username=req[1]
+			found = False
+			#Check if username exists already
+			for p in players:
+				#If it does, then the user logged back in. No need to create a new user
+				if p.username==username:
+					currPlayer=p
+					found=True
+					print currPlayer.username+" logged in"
 
 			#Add a new player if no user with specified username exists
 			if not found:
@@ -61,7 +61,7 @@ def connect(clientSock):
 				#Create player object with this thread's client socket and the user specified username
 				currPlayer = Player(username,clientSock)
 				players.append(currPlayer)
-				print(currPlayer.username+ " created an account and logged in")
+				print currPlayer.username+ " created an account and logged in"
 				lock.release()
 
 			clientSock.send("Welcome: "+currPlayer.username)
@@ -78,14 +78,14 @@ def connect(clientSock):
 
 				#Use sleep function to wait until opponent is found
 				if opponent is None:
-          time.sleep(1)
+					time.sleep(1)
 				#Once an opponent is found, generate a gameID, add it to the list of current games,
 				#and create a game with the found opponent and the current player
 				else:
-          lock.acquire()
+					lock.acquire()
 					id=uuid.uuid4()
 					game=TTTGame(opponent, currPlayer, id)
-					print("New Game with id: "+str(id))
+					print "New Game with id: "+str(id)
 					gameList.append(game.gameID)
 					currPlayer.setBusy()
 					opponent.setBusy()
@@ -109,7 +109,7 @@ def connect(clientSock):
 				for g in gameList:
 					listOfGames+=str(g)
 					listOfGames+="\n"
-        clientSock.send(listOfGames)
+				clientSock.send(listOfGames)
 			else:
 				clientSock.send("No games currently")
 
@@ -118,7 +118,7 @@ def connect(clientSock):
 			if len(players)>0:
 				listOfPlayers=""
 				for p in players:
-          listOfPlayers+=str(p.username+"\n")
+					listOfPlayers+=str(p.username+"\n")
 				clientSock.send(listOfPlayers)
 			else:
 				clientSock.send("No players currently")
@@ -135,7 +135,7 @@ def connect(clientSock):
 
 		#Exit functionality	
 		elif cmd=='exit':
-			print("Client disconnected")
+			print'Client disconnected'
 			clientSock.send("DISC")
 			clientSock.close()
 			break
@@ -177,7 +177,7 @@ def startGame(game):
 				gameover=True
 				game.turn.send("Game over. You won!")
 				game.waiting.send("Game over. "+game.turn.username+" won!")
-				print("Game over")
+				print "Game over"
 		else:
 			continue
 	return
@@ -195,7 +195,7 @@ def checkMove(game, move):
 	if statement !="place":
 		return False
 
-	#Then check that the user's choice is a valid board position	
+	#Then check that the user's choice is a valid board position
 	elif pos<0 or pos>8 or game.board[pos]=='X' or game.board[pos]=='O':
 		return False
 
@@ -205,7 +205,7 @@ def checkMove(game, move):
 #Main loop
 while True:
 	clientSock, addr=socket.accept()
-	print("Connected to a client")
+	print 'Connected to a client'
 
 	start_new_thread(connect, (clientSock,))
 
